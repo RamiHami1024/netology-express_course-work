@@ -1,0 +1,27 @@
+services:
+  app:
+    build: ./app
+    ports:
+      - 3000:3000
+    depends_on:
+      - mongo
+    networks:
+      - main
+    volumes:
+      - ./app:/app
+      - ./app/public:/app/public
+    environment:
+      - HTTP_HOST=${HTTP_HOST}
+      - HTTP_PORT=${HTTP_PORT}
+      - MONGO_URL=${MONGO_URL}
+  mongo:
+    image: mongo
+    restart: always
+    ports:
+      - 27017:27017
+    environment:
+      - MONGO_INITDB_DATABASE=db
+    networks:
+      - main
+networks:
+  main:

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.3.min.js" integrity="sha256-pvPw+upLPUjgMXY0G+8O0xUf+/Im1MZjXxxgOcBQBXU=" crossorigin="anonymous"></script>
+</head>
+<body>
+    <div style="display: flex;flex-direction: row;">
+        <div><button id="create">Create chat</button></div>
+        <div id="main">
+        
+        </div>
+        
+    </div>
+    <script>
+        $(document).ready(() => {
+            const socket = io().connect('http://localhost:3000/')
+            let items;
+
+            $.ajax({
+                url: "http://localhost:3000/api/chats",
+                method: "GET",
+                success: (data) => {
+                    items = data.data
+                    
+                    for (item in items) {
+                        const id = items[item]._id
+
+                        html = `
+                            <div style="display: flex">
+                                <div class="chat-item chat-${id}" style="width: 150px;margin: 10px;">
+                                    <span>${Number(item) + 1}</span>
+                                    <button id="${id}" class="chat-button">Подписаться</button>
+                                </div>
+                                <div style="margin: 10px;"><button id="send_${id}">SEND</button></div>
+                            </div>
+                        `
+
+                        $("#main").append(html)
+                        $(`#${id}`).on('click', function() {
+                            socket.emit('subscribe', $(this).attr('id'))
+
+                            socket.on("newMessage_" + id, (msg) => {
+                                console.log("newMessage_" + id, msg);
+                            })
+                        })
+                        $(`#send_${id}`).on('click', function() {
+                            socket.emit('newMessage_' + id, 'new message');
+                        })
+                    }
+                }
+            })
+
+            const count = 1
+
+            $('#create').on('click', () => {
+                $.ajax({
+                    url: 'http://localhost:3000/api/create-chat',
+                    method: 'POST',
+                    success: (data) => {
+                        const a = data.chatId
+                        html = `
+                            <div style="display: flex">
+                                <div class="chat-item chat-${a}" style="width: 150px;margin: 10px;">
+                                    <span>${count}</span>
+                                    <button id="${a}" class="chat-button">Подписаться</button>
+                                </div>
+                                <div style="margin: 10px;"><button id="send_${id}">SEND</button></div>
+                            </div>
+                        `
+
+                        $("#main").append(html)
+                        $(`#${a}`).on('click', function () {
+                            socket.emit('subscribe', $(this).attr('id'))
+
+                            socket.on("newMessage_" + a, (msg) => {
+                                console.log("newMessage_" + a, msg);
+                            })
+                        })
+                        $(`#send_${id}`).on('click', function () {
+                            socket.emit('newMessage_' + a, 'new message');
+                        })
+                    }
+                })
+                count++
+            })
+        })
+    </script>
+</body>
+</html>
